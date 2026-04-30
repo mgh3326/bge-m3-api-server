@@ -8,14 +8,14 @@
 
     <key>ProgramArguments</key>
     <array>
-        <!-- UPDATE THIS PATH to your venv's Python -->
-        <string>/Users/robin/PycharmProjects/bge-m3-api-server/venv/bin/python</string>
+        <!-- UPDATE THIS PATH if your checkout is elsewhere -->
+        <string>/Users/mgh3326/work/bge-m3-api-server/.venv/bin/python</string>
         <string>-m</string>
         <string>bge_m3_server</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/robin/PycharmProjects/bge-m3-api-server</string>
+    <string>/Users/mgh3326/work/bge-m3-api-server</string>
 
     <key>EnvironmentVariables</key>
     <dict>
