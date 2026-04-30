@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.local.bge-m3-server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- UPDATE THIS PATH to your venv's Python -->
+        <string>/Users/robin/PycharmProjects/bge-m3-api-server/venv/bin/python</string>
+        <string>-m</string>
+        <string>bge_m3_server</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/robin/PycharmProjects/bge-m3-api-server</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>EMBEDDING_HOST</key>
+        <string>127.0.0.1</string>
+        <key>EMBEDDING_PORT</key>
+        <string>10631</string>
+        <key>EMBEDDING_MODEL</key>
+        <string>BAAI/bge-m3</string>
+        <key>EMBEDDING_API_KEY</key>
+        <string>local</string>
+        <key>OMP_NUM_THREADS</key>
+        <string>8</string>
+        <key>MKL_NUM_THREADS</key>
+        <string>8</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/bge-m3-server.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/bge-m3-server.err.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
