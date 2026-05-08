@@ -32,6 +32,8 @@ def configure_routes(model: EmbeddingModel, settings: Settings) -> APIRouter:
             status="ok",
             model=settings.model,
             embedding_dimension=model.dimension,
+            device=getattr(model, "device", "cpu"),
+            fp16=getattr(model, "use_fp16", False),
         )
 
     @router.get("/v1/models", response_model=ModelListResponse)

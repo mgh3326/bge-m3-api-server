@@ -67,3 +67,5 @@ class HealthResponse(BaseModel):
     status: str
     model: str
     embedding_dimension: int
+    device: str = "cpu"
+    fp16: bool = False

@@ -16,16 +16,23 @@ pip install -e ".[dev]"
 
 ### 2. Run the server
 
+The server auto-detects the best available device on startup (CUDA > MPS > CPU). On Apple Silicon you get MPS acceleration with fp16 by default — typically 4-6× faster than the same Mac running CPU.
+
 ```bash
-# Set Intel CPU threading (adjust for your core count)
+# Apple Silicon (M1/M2/M3): no extra config needed
+python -m bge_m3_server
+
+# Intel Mac / CPU only: set OpenMP/MKL threads to your physical core count
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
-
-# Start the server
 python -m bge_m3_server
+
+# Force a specific device (debugging)
+EMBEDDING_DEVICE=cpu python -m bge_m3_server
+EMBEDDING_DEVICE=mps python -m bge_m3_server
 ```
 
-The server starts on `http://127.0.0.1:10631` by default. First startup downloads the model (~600MB) and takes 1-2 minutes.
+The server starts on `http://127.0.0.1:10631` by default. First startup downloads the model (~600MB) and takes 1-2 minutes. The `/health` response now reports the active `device` and `fp16` flag so you can confirm MPS/CUDA is being used.
 
 ### 3. Verify
 
@@ -50,9 +57,13 @@ All settings are controlled via environment variables:
 | `EMBEDDING_PORT` | `10631` | Bind port |
 | `EMBEDDING_MODEL` | `BAAI/bge-m3` | HuggingFace model ID |
 | `EMBEDDING_API_KEY` | `local` | API key for Bearer auth |
-| `EMBEDDING_BATCH_SIZE` | `8` | Max batch size |
-| `OMP_NUM_THREADS` | (system) | OpenMP threads (set to core count) |
-| `MKL_NUM_THREADS` | (system) | MKL threads (set to core count) |
+| `EMBEDDING_DEVICE` | `auto` | `auto` / `cuda` / `mps` / `cpu`. Auto picks cuda > mps > cpu |
+| `EMBEDDING_USE_FP16` | (auto) | `true`/`false`. Auto = True on cuda/mps, False on cpu |
+| `EMBEDDING_ENCODE_BATCH_SIZE` | `12` | Internal FlagEmbedding batch size for `.encode` |
+| `EMBEDDING_MAX_LENGTH` | `8192` | Max tokens per input. Lower (e.g. 1024) = ~5-8× faster on MPS for short inputs |
+| `EMBEDDING_BATCH_SIZE` | `8` | (legacy alias) |
+| `OMP_NUM_THREADS` | (system) | OpenMP threads — only relevant on CPU |
+| `MKL_NUM_THREADS` | (system) | MKL threads — only relevant on CPU |
 
 ## Using with Honcho
 
@@ -127,12 +138,27 @@ pytest tests/ -v
 ./scripts/benchmark.sh
 ```
 
-## Intel Mac CPU Performance Notes
+## Performance Notes
+
+### Apple Silicon (M1/M2/M3) — MPS
+
+- BGE-M3 on M1 Pro 16-core GPU with fp16: ~60-80ms per doc at batch=32 (15-16 docs/s)
+- ~4-6× faster than the same Mac running CPU
+- `EMBEDDING_USE_FP16=true` is on by default for MPS
+- Lowering `EMBEDDING_MAX_LENGTH` from 8192 → 1024 dramatically helps when inputs are short (attention is O(L²)). Skip if you genuinely need 8192-token contexts
+- Some BGE-M3 ops still fall back to CPU on MPS; `PYTORCH_ENABLE_MPS_FALLBACK=1` is set automatically when device=mps
+
+### Intel Mac / CPU
 
 - BGE-M3 on Intel i9 CPU with `OMP_NUM_THREADS=8`: expect ~200-500ms per single embedding, ~1-2s for batch of 16
 - First request after startup is slower (model warmup); the server runs a warmup call automatically
-- `use_fp16=False` is required for CPU mode (fp16 requires GPU)
+- `use_fp16=False` is the default for CPU mode (fp16 requires GPU)
 - Setting `OMP_NUM_THREADS` and `MKL_NUM_THREADS` to your physical core count (not logical) typically gives best throughput
+
+### CUDA
+
+- Use `EMBEDDING_DEVICE=auto` (default) — CUDA wins automatically when available
+- fp16 enabled by default; bigger batches typically scale further than on MPS
 
 ### Future Optimization Options
 

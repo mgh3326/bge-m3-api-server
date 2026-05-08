@@ -44,12 +44,18 @@ def create_app(
 
         embedding_model = EmbeddingModel(
             model_id=settings.model,
-            use_fp16=False,  # CPU mode on Intel Mac
+            device=settings.device,
+            use_fp16=settings.use_fp16,
+            encode_batch_size=settings.encode_batch_size,
+            max_length=settings.max_length,
         )
 
-        # Warmup to prime CPU caches
+        # Warmup to prime caches / JIT MPS kernels.
         warmup_ms = embedding_model.warmup()
-        logger.info("Model ready (warmup: %.0fms)", warmup_ms)
+        logger.info(
+            "Model ready (device=%s fp16=%s warmup=%.0fms)",
+            embedding_model.device, embedding_model.use_fp16, warmup_ms,
+        )
 
         router = configure_routes(model=embedding_model, settings=settings)
         app.include_router(router)
